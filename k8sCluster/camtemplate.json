@@ -1,0 +1,40 @@
+{
+  "name": "k8sCluster",
+  "description": "Create Kubernetes cluster",
+  "type": "prebuilt",
+  "version": "1.0",
+  "manifest": {
+    "template_type": "Terraform",
+    "template_format": "HCL",
+    "template_provider": "VMware vSphere",
+    "template": {
+      "templateOutput": "",
+      "templateVariables": "",
+      "templateData": ""
+    },
+    "template_source": {
+      "githubRepoUrl": "",
+      "githubAccessToken": "",
+      "relativePathToTemplateFolder": "k8sCluster",
+      "templateFileName": "main.tf"
+    }
+  },
+  "metadata": {
+      "displayName": "k8sCluster",
+      "longDescription": "Create Kubernetes cluster on vSphere using Kubespray Ansible playbook"
+      "bullets": [
+       {
+         "title": "Clouds",
+         "description": "VMware"
+       },
+       {
+         "title": "Topology",
+         "description": "Multiple virtual machines cluster"
+       },
+       {
+         "title": "Default Virtual Machine settings",
+         "description": "Standard machine type with 2 virtual CPU and 2 GB of memory."
+       },
+      ]
+  }
+}
