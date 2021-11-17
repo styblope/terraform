@@ -11,9 +11,9 @@
 provider "vsphere" {
   allow_unverified_ssl = var.allow_unverified_ssl
   version              = "~> 1.3, < 1.16.0"
-  user                 = var.vcenter_user
-  password             = var.vcenter_password
-  vsphere_server       = var.vcenter_host
+  user                 = var.vcenter_user == "" ? null : var.vcenter_user
+  password             = var.vcenter_password == "" ? null : var.vcenter_password
+  vsphere_server       = var.vcenter_host == "" ? null : var.vcenter_host
 }
 
 data "vsphere_datacenter" "vm_1_datacenter" {

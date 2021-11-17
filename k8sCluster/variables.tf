@@ -6,14 +6,17 @@ variable "allow_unverified_ssl" {
 
 variable "vcenter_host" {
   description = "vCenter host"
+  default = ""
 }
 
 variable "vcenter_user" {
   description = "vCenter user name"
+  default = ""
 }
 
 variable "vcenter_password" {
   description = "vCenter user password"
+  default = ""
 }
 
 # virtual machine variables

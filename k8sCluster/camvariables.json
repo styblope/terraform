@@ -182,7 +182,7 @@
       "secured": false,
       "required": true,
       "immutable": false,
-      "regex": "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\b",
+      "regex": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
       "group_name": "virtualmachine"
     },
     {
@@ -336,7 +336,7 @@
       "secured": false,
       "required": true,
       "immutable": false,
-      "regex": "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\b",
+      "regex": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
       "group_name": "virtualmachine"
     },
     {
@@ -348,7 +348,7 @@
       "secured": false,
       "required": true,
       "immutable": false,
-      "regex": "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\b",
+      "regex": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
       "group_name": "virtualmachine"
     },
     {
@@ -472,7 +472,40 @@
       "secured": false,
       "required": true,
       "immutable": false,
-      "group_name": "virtualmachine"
+      "group_name": "cloud"
+    },
+    {
+      "name": "vcenter_host",
+      "type": "string",
+      "description": "vCenter host name or IP",
+      "hidden": false,
+      "label": "vCenter host name or IP",
+      "secured": false,
+      "required": true,
+      "immutable": false,
+      "group_name": "cloud"
+    },
+    {
+      "name": "vcenter_user",
+      "type": "string",
+      "description": "vCenter user",
+      "hidden": false,
+      "label": "vCenter user",
+      "secured": false,
+      "required": true,
+      "immutable": false,
+      "group_name": "cloud"
+    },
+    {
+      "name": "vcenter_password",
+      "type": "string",
+      "description": "vCenter user password",
+      "hidden": false,
+      "label": "vCenter user password",
+      "secured": true,
+      "required": true,
+      "immutable": false,
+      "group_name": "cloud"
     }
 	],
   "template_output_params": [
