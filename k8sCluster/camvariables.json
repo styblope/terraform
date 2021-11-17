@@ -82,7 +82,7 @@
         {
           "value": "3",
           "label": "3",
-          "default": true
+          "default": "true"
         },
         {
           "value": "4",
@@ -126,13 +126,13 @@
       "immutable": false,
       "options": [
         {
-          "value": "true",
-          "label": "true"
+          "value": "false",
+          "label": "False",
+          "default": "true"
         },
         {
-          "value": "false",
-          "label": "false",
-          "default": true
+          "value": "true",
+          "label": "True"
         }
       ],
       "group_name": "cloud"
@@ -391,7 +391,7 @@
         {
           "value": "2",
           "label": "2",
-          "default": true
+          "default": "true"
         },
         {
           "value": "3",
