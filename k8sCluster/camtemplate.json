@@ -15,7 +15,7 @@
     "template_source": {
       "githubRepoUrl": "",
       "githubAccessToken": "",
-      "relativePathToTemplateFolder": "k8sCluster",
+      "relativePathToTemplateFolder": "terraform/k8sCluster",
       "templateFileName": "main.tf"
     }
   },
