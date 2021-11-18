@@ -183,7 +183,7 @@ EOF
       "echo ==========",
       "echo KUBECONFIG",
       "echo ==========",
-      "sed -e 's|server: https.*$|server: https://${vsphere_virtual_machine.vm_1[0].default_ip_address}:6443|' $HOME/.kube/config'"
+      "sed -e 's|server: https.*$|server: https://${vsphere_virtual_machine.vm_1[0].default_ip_address}:6443|' $HOME/.kube/config"
     ]
   }
 }
