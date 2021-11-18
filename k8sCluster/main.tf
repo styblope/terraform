@@ -50,12 +50,11 @@ data "vsphere_virtual_machine" "vm_1_template" {
 #########################################################
 # folder resource: folder
 #########################################################
-# vsphere folder
-/* resource "vsphere_folder" "folder" { */
-/*   path          = "${var.cluster_name}" */
-/*   type          = "vm" */
-/*   datacenter_id = "${data.vsphere_datacenter.vm_1_datacenter.id}" */
-/* } */
+resource "vsphere_folder" "folder" {
+  path          = "${var.cluster_name}"
+  type          = "vm"
+  datacenter_id = "${data.vsphere_datacenter.vm_1_datacenter.id}"
+}
 
 #########################################################
 # vm resource: vm_1
