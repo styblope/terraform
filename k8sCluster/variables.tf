@@ -46,10 +46,12 @@ variable "vm_1_memory" {
 
 variable "vm_1_cluster" {
   description = "Target vSphere cluster to host the virtual machine"
+  default = ""
 }
 
 variable "vm_1_resource_pool" {
-  description = "Target vSphere Resource Pool to host the virtual machine"
+  description = "Target vSphere Resource Pool to host the virtual machine. Leave empty for default resource pool"
+  default = ""
 }
 
 variable "vm_1_dns_suffixes" {

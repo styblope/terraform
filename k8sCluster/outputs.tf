@@ -22,7 +22,7 @@ output "cluster_endpoint" {
 
 # TODO
 locals {
-  server = "https://${vsphere_virtual_machine.vm_1.0.default_ip_address}:6443" 
+  server = "https://${vsphere_virtual_machine.vm_1[0].default_ip_address}:6443" 
   kubeconfig = <<KUBECONFIG
 apiVersion: v1
 kind: Config

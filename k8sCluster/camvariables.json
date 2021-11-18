@@ -470,7 +470,7 @@
       "hidden": false,
       "label": "vSphere Resource Pool",
       "secured": false,
-      "required": true,
+      "required": false,
       "immutable": false,
       "group_name": "cloud"
     },

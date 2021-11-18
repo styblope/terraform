@@ -4,6 +4,7 @@
 # - passwordless ssh, ssh-key-gen
 # - test in CAM
 # - output kubeconfig and setup external connection to cluster
+# - coredns issues
 
 #########################################################
 # vsphere provider 
@@ -25,7 +26,14 @@ data "vsphere_datastore" "vm_1_datastore" {
   datacenter_id = data.vsphere_datacenter.vm_1_datacenter.id
 }
 
+data "vsphere_compute_cluster" "vm_1_compute_cluster" {
+  count         = var.vm_1_cluster == "" ? 0 : 1
+  name          = var.vm_1_cluster
+  datacenter_id = data.vsphere_datacenter.vm_1_datacenter.id
+}
+
 data "vsphere_resource_pool" "vm_1_resource_pool" {
+  count         = var.vm_1_resource_pool == "" ? 0 : 1
   name          = var.vm_1_resource_pool
   datacenter_id = data.vsphere_datacenter.vm_1_datacenter.id
 }
@@ -62,8 +70,8 @@ resource "vsphere_virtual_machine" "vm_1" {
   folder           = var.cluster_name
   num_cpus         = var.vm_1_number_of_vcpu
   memory           = var.vm_1_memory
-  resource_pool_id = data.vsphere_resource_pool.vm_1_resource_pool.id
-  datastore_id     = data.vsphere_datastore.vm_1_datastore.id
+  resource_pool_id = var.vm_1_cluster != "" ? (var.vm_1_resource_pool == "" ? data.vsphere_compute_cluster.vm_1_compute_cluster[0].resource_pool_id : data.vsphere_resource_pool.vm_1_resource_pool[0].id) : data.vsphere_resource_pool.vm_1_resource_pool[0].id
+  datastore_id     = var.vm_1_cluster != "" ? null : data.vsphere_datastore.vm_1_datastore.id
   guest_id         = data.vsphere_virtual_machine.vm_1_template.guest_id
   scsi_type        = data.vsphere_virtual_machine.vm_1_template.scsi_type
 
@@ -145,8 +153,12 @@ resource "null_resource" "master" {
       "test ${var.vm_1_proxy} && sed -ie 's|^# http_proxy:.*$|http_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# https_proxy:.*$|https_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# no_proxy:.*$|no_proxy: \"localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}\"|' $GROUP_VARS_ALL_FILE",
+      "# test ${var.vm_1_proxy} && sed -ie 's|^# skip_http_proxy_on_os_packages:.*$|skip_http_proxy_on_os_packages: true|' $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_pipelining: true' >> $GROUP_VARS_ALL_FILE",
-      "echo 'ansible_ssh_common_args: \"-o ControlMaster=auto -o ControlPersist=60s\"' >> $GROUP_VARS_ALL_FILE"
+      "echo 'ansible_ssh_common_args: \"-o ControlMaster=auto -o ControlPersist=60s\"' >> $GROUP_VARS_ALL_FILE",
+      "echo 'upstream_dns_servers:' >> $GROUP_VARS_ALL_FILE",
+      "echo '  - ${var.vm_1_dns_servers[0]}' >> $GROUP_VARS_ALL_FILE",
+      "echo '  - 8.8.8.8' >> $GROUP_VARS_ALL_FILE"
     ]
   }
 
@@ -168,7 +180,11 @@ EOF
     # TODO: replace root password with password-less 
     inline = [
       "cd ~/kubespray",
-      "ansible-playbook -i inventory/${var.cluster_name}/hosts.yaml  --become --become-user=root --extra-vars \"ansible_ssh_pass=${var.vm_os_password}\" cluster.yml"
+      "ansible-playbook -i inventory/${var.cluster_name}/hosts.yaml  --become --become-user=root --extra-vars \"ansible_ssh_pass=${var.vm_os_password}\" cluster.yml",
+      "echo ==========",
+      "echo KUBECONFIG",
+      "echo ==========",
+      "sed -e 's|server: https.*$|server: https://${vsphere_virtual_machine.vm_1[0].default_ip_address}:6443|' $HOME/.kube/config'"
     ]
   }
 }
