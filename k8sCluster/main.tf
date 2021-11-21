@@ -1,10 +1,10 @@
 # TODO:
 # - folder creation vs permissions
-# - define cam json variables
 # - passwordless ssh, ssh-key-gen
 # - test in CAM
 # - output kubeconfig and setup external connection to cluster
 # - coredns issues
+# - cluster name
 
 #########################################################
 # vsphere provider 
@@ -117,11 +117,16 @@ resource "vsphere_virtual_machine" "vm_1" {
 
   provisioner "remote-exec" {
     inline = [
-      "test ${var.vm_1_proxy} && echo 'http_proxy=${var.vm_1_proxy}' >> /etc/environment",
-      "test ${var.vm_1_proxy} && echo 'https_proxy=${var.vm_1_proxy}' >> /etc/environment",
-      "test ${var.vm_1_proxy} && echo 'no_proxy=localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}' >> /etc/environment"
+      #"test ${var.vm_1_proxy} && echo 'http_proxy=${var.vm_1_proxy}' >> /etc/environment",
+      #"test ${var.vm_1_proxy} && echo 'https_proxy=${var.vm_1_proxy}' >> /etc/environment",
+      #"test ${var.vm_1_proxy} && echo 'no_proxy=localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}' >> /etc/environment"
+      "# hack around vmware-tools dns configuration bugs",
+      "echo -n '%{for dns in var.vm_1_dns_servers}DNS${index(var.vm_1_dns_servers, dns)+1}=${dns}\n%{endfor}' >> /etc/sysconfig/network-scripts/ifcfg-ens192",
+      "test ${var.vm_1_domain} && echo 'DOMAIN=${var.vm_1_domain}' >> /etc/sysconfig/network-scripts/ifcfg-ens192",
+      "nmcli c reload && nmcli c down path 1 && nmcli c up path 1"
     ]
   }
+
 } # end of vsphere_virtual_machine resource
 
 ################################################
@@ -136,14 +141,17 @@ resource "null_resource" "master" {
     password    = var.vm_os_password
     timeout     = "5m"
   }
-
+  
+  # clone and configure kubespray
   # https://github.com/kubernetes-sigs/kubespray
   provisioner "remote-exec" {
     inline = [
+      "# start actual kubespray config",
       "sudo mount -o remount,size=1G,noatime /tmp # increase /tmp size for kubespray installation",
+      "git config --global http.proxy ${var.vm_1_proxy}",
       "cd && git clone https://github.com/kubernetes-sigs/kubespray.git",
       "cd kubespray",
-      "sudo pip3 install -r requirements.txt",
+      "sudo pip3 install --proxy ${var.vm_1_proxy} -r requirements.txt",
       "cp -rfp inventory/sample inventory/${var.cluster_name}",
       "CONFIG_FILE=inventory/${var.cluster_name}/hosts.yaml python3 contrib/inventory_builder/inventory.py ${join(" ", vsphere_virtual_machine.vm_1.*.default_ip_address)}",
       "GROUP_VARS_ALL_FILE=inventory/${var.cluster_name}/group_vars/all/all.yml",
@@ -152,15 +160,14 @@ resource "null_resource" "master" {
       "test ${var.vm_1_proxy} && sed -ie 's|^# http_proxy:.*$|http_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# https_proxy:.*$|https_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# no_proxy:.*$|no_proxy: \"localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}\"|' $GROUP_VARS_ALL_FILE",
-      "# test ${var.vm_1_proxy} && sed -ie 's|^# skip_http_proxy_on_os_packages:.*$|skip_http_proxy_on_os_packages: true|' $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_pipelining: true' >> $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_common_args: \"-o ControlMaster=auto -o ControlPersist=60s\"' >> $GROUP_VARS_ALL_FILE",
       "echo 'upstream_dns_servers:' >> $GROUP_VARS_ALL_FILE",
-      "echo '  - ${var.vm_1_dns_servers[0]}' >> $GROUP_VARS_ALL_FILE",
-      "echo '  - 8.8.8.8' >> $GROUP_VARS_ALL_FILE"
+      "echo -n '%{for dns in var.vm_1_dns_servers}  - ${dns}\n%{endfor}' >> $GROUP_VARS_ALL_FILE"
     ]
   }
 
+  # vsphere cloud provider config
   provisioner "file" {
     destination = "kubespray/inventory/${var.cluster_name}/group_vars/all/vsphere.yml"
     content = <<EOF
@@ -172,18 +179,40 @@ external_vsphere_user: "${var.vcenter_user}" # Can also be set via the `VSPHERE_
 external_vsphere_password: "${var.vcenter_password}" # Can also be set via the `VSPHERE_PASSWORD` environment variable
 external_vsphere_datacenter: "${var.vm_1_datacenter}"
 external_vsphere_kubernetes_cluster_id: "${var.cluster_name}"
+vsphere_csi_enabled: true
 EOF
   }
 
+  # execute playbook
   provisioner "remote-exec" {
     # TODO: replace root password with password-less 
     inline = [
       "cd ~/kubespray",
-      "ansible-playbook -i inventory/${var.cluster_name}/hosts.yaml  --become --become-user=root --extra-vars \"ansible_ssh_pass=${var.vm_os_password}\" cluster.yml",
-      "echo ==========",
-      "echo KUBECONFIG",
-      "echo ==========",
-      "sed -e 's|server: https.*$|server: https://${vsphere_virtual_machine.vm_1[0].default_ip_address}:6443|' $HOME/.kube/config"
+      "ansible-playbook -i inventory/${var.cluster_name}/hosts.yaml  --become --become-user=root --extra-vars \"ansible_ssh_pass=${var.vm_os_password}\" -v cluster.yml"
+    ]
+  }
+
+  provisioner "file" {
+  destination = "sc.yaml"
+  content = <<EOF
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: thin
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+#provisioner: kubernetes.io/vsphere-volume
+provisioner: csi.vsphere.vmware.com
+parameters:
+  diskformat: thin
+  storagepolicyname: "thin"
+reclaimPolicy: Delete
+EOF
+  }
+  
+  provisioner "remote-exec" {
+    inline = [
+      "kubectl create -f sc.yaml"
     ]
   }
 }
