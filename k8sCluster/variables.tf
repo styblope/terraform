@@ -114,7 +114,7 @@ variable "vm_1_root_disk_keep_on_remove" {
 
 variable "vm_1_root_disk_size" {
   description = "Size of template disk volume. Should be equal to template's disk size"
-  default     = "25"
+  default     = "20"
 }
 
 variable "vm_1_image" {
