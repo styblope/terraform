@@ -123,7 +123,8 @@ resource "vsphere_virtual_machine" "vm_1" {
       "# hack around vmware-tools dns configuration bugs",
       "echo -n '%{for dns in var.vm_1_dns_servers}DNS${index(var.vm_1_dns_servers, dns)+1}=${dns}\n%{endfor}' >> /etc/sysconfig/network-scripts/ifcfg-ens192",
       "test ${var.vm_1_domain} && echo 'DOMAIN=${var.vm_1_domain}' >> /etc/sysconfig/network-scripts/ifcfg-ens192",
-      "nmcli c reload && nmcli c down path 1 && nmcli c up path 1"
+      "nmcli c reload",
+      #"nmcli c down path 1 && nmcli c up path 1"
     ]
   }
 
