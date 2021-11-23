@@ -10,8 +10,7 @@
 # vsphere provider 
 #########################################################
 provider "vsphere" {
-  #allow_unverified_ssl = var.allow_unverified_ssl
-  allow_unverified_ssl = true
+  allow_unverified_ssl = var.allow_unverified_ssl
   version              = "~> 1.3, < 1.16.0"
   user                 = var.vcenter_user == "" ? null : var.vcenter_user
   password             = var.vcenter_password == "" ? null : var.vcenter_password

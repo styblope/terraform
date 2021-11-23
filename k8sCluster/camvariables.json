@@ -122,7 +122,7 @@
       "hidden": true,
       "label": "Communication with vsphere server with self signed certificate",
       "secured": false,
-      "required": true,
+      "required": false,
       "immutable": false,
       "options": [
         {

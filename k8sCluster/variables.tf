@@ -1,8 +1,8 @@
 # vsphere variables
-#variable "allow_unverified_ssl" {
-#  description = "Communication with vsphere server with self signed certificate"
-#  default     = "true"
-#}
+variable "allow_unverified_ssl" {
+  description = "Communication with vsphere server with self signed certificate"
+  default     = "true"
+}
 
 variable "vcenter_host" {
   description = "vCenter host"
