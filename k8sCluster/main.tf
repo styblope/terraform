@@ -73,6 +73,7 @@ resource "vsphere_virtual_machine" "vm_1" {
   datastore_id     = var.vm_1_cluster != "" ? null : data.vsphere_datastore.vm_1_datastore.id
   guest_id         = data.vsphere_virtual_machine.vm_1_template.guest_id
   scsi_type        = data.vsphere_virtual_machine.vm_1_template.scsi_type
+  firmware         = "efi"
 
   clone {
     template_uuid = data.vsphere_virtual_machine.vm_1_template.id
