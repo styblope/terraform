@@ -127,12 +127,12 @@
       "options": [
         {
           "value": "false",
-          "label": "False",
-          "default": "true"
+          "label": "False"
         },
         {
           "value": "true",
-          "label": "True"
+          "label": "True",
+          "default": "true"
         }
       ],
       "group_name": "cloud"
