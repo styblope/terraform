@@ -73,7 +73,7 @@ resource "vsphere_virtual_machine" "vm_1" {
   datastore_id     = var.vm_1_cluster != "" ? null : data.vsphere_datastore.vm_1_datastore.id
   guest_id         = data.vsphere_virtual_machine.vm_1_template.guest_id
   scsi_type        = data.vsphere_virtual_machine.vm_1_template.scsi_type
-  firmware         = "efi"
+  firmware         = var.vm_1_firmware 
 
   clone {
     template_uuid = data.vsphere_virtual_machine.vm_1_template.id
@@ -152,20 +152,23 @@ resource "null_resource" "master" {
       "sudo mount -o remount,size=1G,noatime /tmp # increase /tmp size for kubespray installation",
       "git config --global http.proxy ${var.vm_1_proxy}",
       "cd && git clone https://github.com/kubernetes-sigs/kubespray.git",
+      #"git checkout release-2.17",
       "cd kubespray",
       "sudo pip3 install --proxy ${var.vm_1_proxy} -r requirements.txt",
       "cp -rfp inventory/sample inventory/${var.cluster_name}",
       "CONFIG_FILE=inventory/${var.cluster_name}/hosts.yaml python3 contrib/inventory_builder/inventory.py ${join(" ", vsphere_virtual_machine.vm_1.*.default_ip_address)}",
       "GROUP_VARS_ALL_FILE=inventory/${var.cluster_name}/group_vars/all/all.yml",
-      "sed -ie 's|^# cloud_provider:.*$|cloud_provider: \"external\"|' $GROUP_VARS_ALL_FILE",
-      "sed -ie 's|^# external_cloud_provider:.*$|external_cloud_provider: \"vsphere\"|' $GROUP_VARS_ALL_FILE",
+      "sed -ie 's|^container_manager:.*$|container_manager: docker|' inventory/${var.cluster_name}/group_vars/k8s_cluster/k8s-cluster.yml",
       "test ${var.vm_1_proxy} && sed -ie 's|^# http_proxy:.*$|http_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# https_proxy:.*$|https_proxy: \"${var.vm_1_proxy}\"|' $GROUP_VARS_ALL_FILE",
       "test ${var.vm_1_proxy} && sed -ie 's|^# no_proxy:.*$|no_proxy: \"localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}\"|' $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_pipelining: true' >> $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_common_args: \"-o ControlMaster=auto -o ControlPersist=60s\"' >> $GROUP_VARS_ALL_FILE",
       "echo 'upstream_dns_servers:' >> $GROUP_VARS_ALL_FILE",
-      "echo -n '%{for dns in var.vm_1_dns_servers}  - ${dns}\n%{endfor}' >> $GROUP_VARS_ALL_FILE"
+      "echo -n '%{for dns in var.vm_1_dns_servers}  - ${dns}\n%{endfor}' >> $GROUP_VARS_ALL_FILE",
+      #"sed -ie 's|^# cloud_provider:.*$|cloud_provider: \"external\"|' $GROUP_VARS_ALL_FILE",
+      "sed -ie 's|^# cloud_provider:.*$|cloud_provider: \"vsphere\"|' $GROUP_VARS_ALL_FILE",
+      "sed -ie 's|^# external_cloud_provider:.*$|external_cloud_provider: \"vsphere\"|' $GROUP_VARS_ALL_FILE"
     ]
   }
 
@@ -174,14 +177,28 @@ resource "null_resource" "master" {
     destination = "kubespray/inventory/${var.cluster_name}/group_vars/all/vsphere.yml"
     content = <<EOF
 ## Values for the external vSphere Cloud Provider
-external_vsphere_vcenter_ip: "${var.vcenter_host}"
-external_vsphere_vcenter_port: "443"
-external_vsphere_insecure: "true"
-external_vsphere_user: "${var.vcenter_user}" # Can also be set via the `VSPHERE_USER` environment variable
-external_vsphere_password: "${var.vcenter_password}" # Can also be set via the `VSPHERE_PASSWORD` environment variable
-external_vsphere_datacenter: "${var.vm_1_datacenter}"
-external_vsphere_kubernetes_cluster_id: "${var.cluster_name}"
-vsphere_csi_enabled: true
+# CNS vSphere cloud provider
+#external_vsphere_vcenter_ip: "${var.vcenter_host}"
+#external_vsphere_vcenter_port: "443"
+#external_vsphere_insecure: "true"
+#external_vsphere_user: "${var.vcenter_user}" # Can also be set via the `VSPHERE_USER` environment variable
+#external_vsphere_password: "${var.vcenter_password}" # Can also be set via the `VSPHERE_PASSWORD` environment variable
+#external_vsphere_datacenter: "${var.vm_1_datacenter}"
+#external_vsphere_kubernetes_cluster_id: "${var.cluster_name}"
+#vsphere_csi_enabled: true
+#external_vsphere_vcenter_ip: "${var.vcenter_host}"
+
+# In-tree vSphere cloud provider (deprecated)
+vsphere_vcenter_ip: "${var.vcenter_host}"
+vsphere_vcenter_port: "443"
+vsphere_insecure: "1"
+vsphere_user: "${var.vcenter_user}" # Can also be set via the `VSPHERE_USER` environment variable
+vsphere_password: "${var.vcenter_password}" # Can also be set via the `VSPHERE_PASSWORD` environment variable
+vsphere_datacenter: "${var.vm_1_datacenter}"
+vsphere_datastore: "${var.vm_1_root_disk_datastore}"
+vsphere_working_dir: "${var.cluster_name}"
+vsphere_resource_pool: "${var.vm_1_resource_pool}"
+vsphere_scsi_controller_type: "pvscsi"
 EOF
   }
 
@@ -203,12 +220,13 @@ metadata:
   name: thin
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
-#provisioner: kubernetes.io/vsphere-volume
-provisioner: csi.vsphere.vmware.com
+provisioner: kubernetes.io/vsphere-volume
+#provisioner: csi.vsphere.vmware.com
 parameters:
   diskformat: thin
-  storagepolicyname: "thin"
+  datastore: "${var.vm_1_datastore}"
 reclaimPolicy: Delete
+volumeBindingMode: Immediate
 EOF
   }
   

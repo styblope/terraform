@@ -121,6 +121,11 @@ variable "vm_1_image" {
   description = "Operating system image name / template that should be used when creating the virtual image"
 }
 
+variable "vm_1_firmware" {
+  description = "Firmware interface to use on the virtual machine. Can be one of bios or EFI (default is bios)"
+  default = "bios"
+}
+
 variable "vm_1_proxy" {
   description = "HTTP proxy url, e.g. http://proxy:3128"
   default = ""

@@ -242,6 +242,28 @@
       "group_name": "virtualmachine"
     },
     {
+      "name": "vm_1_firmware",
+      "type": "string",
+      "description": "Firmware interface to use on the virtual machine",
+      "hidden": false,
+      "label": "Firmware interface to use on the virtual machine",
+      "secured": false,
+      "options": [
+        {
+          "value": "bios",
+          "label": "bios",
+          "default": "true"
+        },
+        {
+          "value": "EFI",
+          "label": "EFI"
+        }
+      ],
+      "required": true,
+      "immutable": false,
+      "group_name": "virtualmachine"
+    },
+    {
       "name": "vm_1_root_disk_size",
       "type": "string",
       "description": "Size of template disk volume. Should be equal to template's disk size",
