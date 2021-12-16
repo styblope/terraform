@@ -224,7 +224,7 @@ provisioner: kubernetes.io/vsphere-volume
 #provisioner: csi.vsphere.vmware.com
 parameters:
   diskformat: thin
-  datastore: "${var.vm_1_datastore}"
+  datastore: "${var.vm_1_root_disk_datastore}"
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 EOF
