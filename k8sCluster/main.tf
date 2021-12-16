@@ -150,11 +150,11 @@ resource "null_resource" "master" {
     inline = [
       "# start actual kubespray config",
       "sudo mount -o remount,size=1G,noatime /tmp # increase /tmp size for kubespray installation",
-      "git config --global http.proxy ${var.vm_1_proxy}",
+      "git config %{if var.vm_1_proxy != ""}--global http.proxy ${var.vm_1_proxy}%{endif}",
       "cd && git clone https://github.com/kubernetes-sigs/kubespray.git",
       #"git checkout release-2.17",
       "cd kubespray",
-      "sudo pip3 install --proxy ${var.vm_1_proxy} -r requirements.txt",
+      "sudo pip3 install %{if var.vm_1_proxy != ""}--proxy ${var.vm_1_proxy}%{endif} -r requirements.txt",
       "cp -rfp inventory/sample inventory/${var.cluster_name}",
       "CONFIG_FILE=inventory/${var.cluster_name}/hosts.yaml python3 contrib/inventory_builder/inventory.py ${join(" ", vsphere_virtual_machine.vm_1.*.default_ip_address)}",
       "GROUP_VARS_ALL_FILE=inventory/${var.cluster_name}/group_vars/all/all.yml",
