@@ -152,7 +152,7 @@ resource "null_resource" "master" {
       "sudo mount -o remount,size=1G,noatime /tmp # increase /tmp size for kubespray installation",
       "git config %{if var.vm_1_proxy != ""}--global http.proxy ${var.vm_1_proxy}%{endif}",
       "cd && git clone https://github.com/kubernetes-sigs/kubespray.git",
-      #"git checkout release-2.17",
+      "git checkout release-2.17.1",
       "cd kubespray",
       "sudo pip3 install %{if var.vm_1_proxy != ""}--proxy ${var.vm_1_proxy}%{endif} -r requirements.txt",
       "cp -rfp inventory/sample inventory/${var.cluster_name}",
