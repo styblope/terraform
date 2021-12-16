@@ -256,7 +256,7 @@
         },
         {
           "value": "efi",
-          "label": "EFI"
+          "label": "efi"
         }
       ],
       "required": true,
