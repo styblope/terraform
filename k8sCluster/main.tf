@@ -61,7 +61,7 @@ resource "vsphere_folder" "folder" {
 #########################################################
 locals {
   ip_addr_split = split(".", var.vm_1_ipv4_address)
-    }
+}
 
 resource "vsphere_virtual_machine" "vm_1" {
   count            = var.node_count
@@ -164,7 +164,7 @@ resource "null_resource" "master" {
       "test ${var.vm_1_proxy} && sed -ie 's|^# no_proxy:.*$|no_proxy: \"localhost,127.0.0.1,127.0.1.1,.${var.vm_1_domain}\"|' $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_pipelining: true' >> $GROUP_VARS_ALL_FILE",
       "echo 'ansible_ssh_common_args: \"-o ControlMaster=auto -o ControlPersist=60s\"' >> $GROUP_VARS_ALL_FILE",
-      "%{if var.vm_1_dns_servers != ""}echo 'upstream_dns_servers:' >> $GROUP_VARS_ALL_FILE%{endif}",
+      "%{if join("", var.vm_1_dns_servers) != ""}echo 'upstream_dns_servers:' >> $GROUP_VARS_ALL_FILE%{endif}",
       "echo -n '%{for dns in var.vm_1_dns_servers}  - ${dns}\n%{endfor}' >> $GROUP_VARS_ALL_FILE",
       # "sed -ie 's|^# cloud_provider:.*$|cloud_provider: \"external\"|' $GROUP_VARS_ALL_FILE",
       "sed -ie 's|^# cloud_provider:.*$|cloud_provider: \"vsphere\"|' $GROUP_VARS_ALL_FILE",
